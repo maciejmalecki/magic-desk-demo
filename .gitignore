@@ -30,4 +30,7 @@ gradle-app.setting
 
 # intermediate data
 *.bin
+!graphics-linked.bin
 *.sid
+
+*.crt

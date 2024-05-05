@@ -5,13 +5,11 @@ plugins {
     id("com.github.hierynomus.license") version "0.16.1"
 }
 
+val kickAssVersion = "5.25"
+
 retroProject {
     dialect = AssemblerType.KickAssembler
-    dialectVersion = "5.25"
-    libDirs = arrayOf(".ra/deps/c64lib", "build/charpad", "build/spritepad", "build/goattracker")
-
-    libFromGitHub("c64lib/common", "0.3.0")
-    libFromGitHub("c64lib/chipset", "0.3.0")
+    dialectVersion = kickAssVersion
 }
 
 license {
@@ -37,42 +35,18 @@ tasks.register<com.hierynomus.gradle.license.tasks.LicenseCheck>("licenseAsm") {
 }
 tasks["licenseFormat"].dependsOn("licenseFormatAsm")
 
+val kickAssJar = ".ra/asms/ka/$kickAssVersion/KickAss.jar"
 
-preprocess {
+tasks.register<Exec>("build-crt-bin") {
+    group = "build"
+    description = "links the whole game as a raw cart image"
+    commandLine("java", "-jar",  kickAssJar, 
+    "demo.asm")
+}
 
-    // goattracker {
-    //   getInput().set(file("song.sng"))
-    //   getUseBuildDir().set(true)
-    //   music {
-    //     output = file("song.sid")
-    //     bufferedSidWrites = true
-    //     sfxSupport = true
-    //     storeAuthorInfo = true
-    //     playerMemoryLocation = 0xF5
-    //   }
-    // }
-
-    // charpad {
-    //   getInput().set(file("playfield.ctm"))
-    //   getUseBuildDir().set(true)
-    //   outputs {
-    //     meta {
-    //       dialect = "KickAssembler"
-    //       output = file("playfield-meta.asm")
-    //     }
-    //     charset {
-    //       output = file("playfield-charset.bin")
-    //     }
-    //   }
-    // }
-
-    // spritepad {
-    //   getInput().set(file("sprites.spd"))
-    //   getUseBuildDir().set(true)
-    //   outputs {
-    //     sprites {
-    //       output = file("sprites.bin")
-    //     }
-    //   }
-    // }
+tasks.register<Exec>("build-crt") {
+    dependsOn("build-crt-bin")
+    group = "build"
+    description = "links the whole game as a CRT cart image"
+    commandLine("cartconv", "-t", "md", "-i", "demo.bin", "-o", "demo.crt", "-l", "$8000")
 }
